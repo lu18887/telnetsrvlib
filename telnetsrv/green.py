@@ -2,6 +2,7 @@
 # Telnet handler concrete class using green threads
 
 import gevent, gevent.queue
+from gevent import select
 
 from telnetsrvlib import TelnetHandlerBase, command
 
@@ -41,7 +42,10 @@ class TelnetHandler(TelnetHandlerBase):
 
     def inputcooker_socket_ready(self):
         """Indicate that the socket is ready to be read"""
-        return gevent.select.select([self.sock.fileno()], [], [], 0) != ([], [], [])
+        if hasattr(gevent,"select"):
+            return gevent.select.select([self.sock.fileno()], [], [], 0) != ([], [], [])
+        else:
+             return select.select([self.sock.fileno()], [], [], 0) != ([], [], [])
 
     def inputcooker_store_queue(self, char):
         """Put the cooked data in the input queue (no locking needed)"""
